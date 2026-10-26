@@ -3,8 +3,8 @@ Refreshes the Dream Inventory data.
 
 Downloads every Valorant weapon skin from the community VALORANT-API,
 shrinks each picture, packs them into one small picture sheet per weapon
-and writes a skin list. Everything goes into the docs/ folder, which is the
-folder your website serves. The GitHub workflow in this repository runs
+and writes a skin list. Everything goes into the top folder of the repository, which is
+what your website serves. The GitHub workflow in this repository runs
 this script once a day, so new skins appear without any work from you.
 
 You can also run it yourself:  pip install pillow  then  python update_site.py
@@ -24,7 +24,7 @@ except ImportError:
     sys.exit("Pillow is missing. Run:  pip install pillow")
 
 API = "https://valorant-api.com/v1"
-OUT = "docs"
+OUT = "."
 CW, CH, COLS = 288, 120, 6          # one picture cell, and cells per row
 TIER_BY_NAME = {"Select": "S", "Deluxe": "D", "Premium": "P", "Exclusive": "E", "Ultra": "U"}
 GROUP_BY_CAT = {"Sidearm": "Sidearms", "SMG": "SMGs", "Shotgun": "Shotguns", "Rifle": "Rifles",
@@ -71,7 +71,7 @@ def make_cell(raw):
 
 def build(weapons, tiers, out_dir=OUT, get=fetch):
     tier_code = {t["uuid"]: TIER_BY_NAME.get(t["devName"], "C") for t in tiers}
-    atlas_dir = os.path.join(out_dir, "atlas")
+    atlas_dir = out_dir
     os.makedirs(atlas_dir, exist_ok=True)
     catalog = {"cols": COLS, "w": {}, "meta": {}}
     digest = hashlib.sha1()
