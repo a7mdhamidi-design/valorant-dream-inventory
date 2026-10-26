@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Pick a skin for every Valorant weapon and see what your dream inventory costs in VP and real money.">
+<meta name="theme-color" content="#0a1220">
+<title>Dream Inventory</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Big+Shoulders+Display:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: weapon board in four game-style columns on the left, sticky cost summary on the right.
+   Single dark look on purpose, to match the in-game collection screen. */
+:root {
+  --bg: #0a1220;
+  --panel: #101b2f;
+  --panel-2: #15233b;
+  --line: #243556;
+  --text: #e9edf5;
+  --muted: #93a1bb;
+  --accent: #ff4655;
+  --t-s: #5aa9f0;
+  --t-d: #1fb5a5;
+  --t-p: #e0629a;
+  --t-e: #f59a5b;
+  --t-u: #f6d35f;
+  --t-c: #9fb0cf;
+  --f-display: 'Big Shoulders Display', 'Oswald', 'Arial Narrow', sans-serif;
+  --f-body: 'Barlow', 'Segoe UI', system-ui, sans-serif;
+  --f-num: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+img { max-width: 100%; }
+body {
+  background-color: var(--bg);
+  background-image:
+    repeating-linear-gradient(45deg, rgba(255,255,255,.018) 0 1px, transparent 1px 90px),
+    repeating-linear-gradient(-45deg, rgba(255,255,255,.018) 0 1px, transparent 1px 90px);
+  color: var(--text);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.45;
+  padding-block: 28px 40px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.shell { max-width: 1480px; margin: 0 auto; display: grid; gap: 24px; }
+
+/* header */
+.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 18px 32px; }
+.eyebrow { margin: 0 0 4px; font-size: 12px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); }
+h1 { margin: 0; font: 800 clamp(40px, 7vw, 68px)/.95 var(--f-display); letter-spacing: .01em; text-transform: uppercase; text-wrap: balance; }
+.lede { margin: 10px 0 0; max-width: 52ch; color: var(--muted); }
+.tools { display: grid; gap: 8px; min-width: 0; }
+.tools-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.tools-lab { font-size: 12px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.chip {
+  border: 1px solid var(--line); background: var(--panel); padding: 6px 12px;
+  font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 7px;
+}
+.chip:hover { border-color: var(--c, var(--accent)); }
+.chip i { width: 8px; height: 8px; background: var(--c, var(--muted)); display: inline-block; }
+.ghost { border: 1px solid var(--line); background: transparent; padding: 6px 12px; font-size: 13px; font-weight: 500; color: var(--muted); }
+.ghost:hover { color: var(--text); border-color: var(--muted); }
+.note { margin: 0; font-size: 13px; color: var(--muted); }
+
+/* layout */
+.layout { display: grid; gap: 24px; align-items: start; }
+@media (min-width: 1100px) { .layout { grid-template-columns: minmax(0, 1fr) 372px; } }
+
+/* board */
+.board { display: grid; gap: 28px 20px; grid-template-columns: repeat(auto-fit, minmax(235px, 1fr)); align-items: start; }
+.col { display: grid; gap: 26px; min-width: 0; }
+.cat-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 10px; }
+.cat-h h2 { margin: 0; font: 700 30px/1 var(--f-display); text-transform: uppercase; letter-spacing: .02em; }
+.cat-h span { font: 400 12px var(--f-num); color: var(--muted); }
+.slots { display: grid; gap: 10px; }
+.slot {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: end;
+  width: 100%; min-height: 74px; padding: 11px 14px 15px; text-align: left;
+  background: linear-gradient(140deg, var(--panel-2), var(--panel)); border: 1px solid var(--line);
+}
+.slot::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 0; height: 3px; background: var(--tc, var(--line)); }
+.slot:hover { border-color: var(--tc, var(--accent)); }
+.slot .w { grid-column: 1 / -1; font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.slot .n { min-width: 0; overflow-wrap: anywhere; font: 700 21px/1.1 var(--f-display); text-transform: uppercase; letter-spacing: .01em; }
+.slot.empty .n { color: var(--muted); font-weight: 600; }
+.slot .p { font: 500 13px var(--f-num); color: var(--tc, var(--muted)); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+/* summary */
+.summary { background: var(--panel); border: 1px solid var(--line); padding: 20px; display: grid; gap: 18px; min-width: 0; }
+@media (min-width: 1100px) { .summary { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; } }
+.sum-h { margin: 0; font: 700 14px var(--f-body); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.big { font: 800 56px/1 var(--f-display); letter-spacing: .01em; font-variant-numeric: tabular-nums; }
+.big small { font: 600 20px var(--f-display); letter-spacing: .08em; color: var(--muted); margin-left: 6px; }
+.sub { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.tierbar { display: flex; height: 10px; gap: 2px; background: var(--bg); }
+.tierbar div { min-width: 3px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 8px 0 0; padding: 0; list-style: none; font-size: 12px; color: var(--muted); }
+.legend li { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 8px; height: 8px; display: inline-block; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+label.f { display: grid; gap: 4px; font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); min-width: 0; }
+input[type="number"], input[type="text"], input[type="search"] {
+  width: 100%; min-width: 0; padding: 8px 10px; background: var(--bg); border: 1px solid var(--line);
+  font: 500 14px var(--f-num); color: var(--text); text-transform: none; letter-spacing: 0;
+}
+input:focus { border-color: var(--accent); }
+.buy { border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 10px; }
+.money { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.usd { font: 800 44px/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.tnd { font: 500 16px var(--f-num); color: var(--muted); font-variant-numeric: tabular-nums; }
+.packs { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font: 400 13px var(--f-num); }
+.packs li { display: flex; justify-content: space-between; gap: 10px; }
+.packs span:last-child { color: var(--muted); }
+.fine { margin: 0; font-size: 12px; color: var(--muted); }
+.items { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 2px; }
+.items ul { margin: 8px 0 0; padding: 0; list-style: none; display: grid; gap: 2px; }
+.items li { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 4px 0; font-size: 14px; }
+.items li i { width: 8px; height: 8px; background: var(--tc); }
+.items .nm { overflow-wrap: anywhere; }
+.items .vp { font: 400 13px var(--f-num); font-variant-numeric: tabular-nums; }
+.rm { border: 0; background: transparent; color: var(--muted); font-size: 18px; line-height: 1; padding: 2px 6px; }
+.rm:hover { color: var(--accent); }
+.empty-note { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { background: var(--accent); border: 0; color: #fff; padding: 9px 16px; font-weight: 600; letter-spacing: .04em; }
+.btn:hover { filter: brightness(1.1); }
+#copybox { width: 100%; min-height: 110px; padding: 8px 10px; background: var(--bg); border: 1px solid var(--line); font: 400 12px var(--f-num); color: var(--text); resize: vertical; }
+footer { color: var(--muted); font-size: 12px; max-width: 80ch; }
+
+/* mobile total bar */
+.bar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 5; display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px max(16px, env(safe-area-inset-right, 0px)) calc(10px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: var(--panel); border-top: 1px solid var(--line); }
+.bar b { font: 800 26px/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.bar span { font: 400 13px var(--f-num); color: var(--muted); margin-left: 8px; }
+@media (min-width: 1100px) { .bar { display: none; } }
+@media (max-width: 1099px) { body { padding-bottom: 96px; } }
+
+/* picker */
+.scrim { position: fixed; inset: 0; z-index: 20; background: rgba(4, 8, 16, .78); display: grid; place-items: center; padding: 16px; }
+.sheet { width: min(660px, 100%); max-height: 92dvh; overflow-y: auto; background: var(--panel); border: 1px solid var(--line); padding: 20px; display: grid; gap: 14px; align-content: start; }
+@media (max-width: 640px) {
+  .scrim { align-items: end; padding: 0; }
+  .sheet { max-height: 88dvh; padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)); }
+}
+.sheet-h { display: flex; justify-content: space-between; align-items: start; gap: 12px; }
+.sheet-h h2 { margin: 0; font: 800 38px/1 var(--f-display); text-transform: uppercase; }
+.x { border: 1px solid var(--line); background: transparent; width: 36px; height: 36px; font-size: 20px; line-height: 1; }
+.x:hover { border-color: var(--accent); }
+.lab { margin: 6px 0 0; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.cur { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--line); background: var(--bg); }
+.cur-row { display: grid; grid-template-columns: minmax(0, 1fr) 120px auto; gap: 8px; align-items: end; }
+@media (max-width: 520px) { .cur-row { grid-template-columns: 1fr 1fr; } .cur-row .rm-wide { grid-column: 1 / -1; } }
+.tiers { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
+.tier { text-align: left; border: 1px solid var(--line); background: var(--panel-2); padding: 9px 11px; display: grid; gap: 2px; border-bottom: 3px solid var(--c); }
+.tier:hover { border-color: var(--c); }
+.tier b { font: 700 18px/1 var(--f-display); text-transform: uppercase; }
+.tier span { font: 400 12px var(--f-num); color: var(--muted); }
+.th { display: block; width: 100%; aspect-ratio: 288 / 120; background-repeat: no-repeat; grid-column: 1 / -1; }
+.gal-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.fchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fchip { border: 1px solid var(--line); background: var(--panel-2); padding: 4px 10px; font-size: 12px; font-weight: 500; display: inline-flex; gap: 6px; align-items: center; }
+.fchip i { width: 8px; height: 8px; background: var(--c, var(--muted)); display: inline-block; }
+.fchip[aria-pressed="true"] { border-color: var(--text); background: var(--bg); }
+.gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px, 1fr)); gap: 8px; max-height: 44vh; overflow-y: auto; padding-right: 2px; align-content: start; }
+.sk { position: relative; display: grid; gap: 4px; text-align: left; padding: 8px 8px 11px; border: 1px solid var(--line); background: linear-gradient(140deg, var(--panel-2), var(--panel)); content-visibility: auto; contain-intrinsic-size: auto 160px; }
+.sk::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 2px; background: var(--c); }
+.sk:hover { border-color: var(--c); }
+.sk[aria-current="true"] { border-color: var(--text); }
+.sk b { font: 700 15px/1.1 var(--f-display); text-transform: uppercase; overflow-wrap: anywhere; }
+.sk .meta { font: 400 12px var(--f-num); color: var(--muted); }
+details.more { border: 1px solid var(--line); padding: 10px 12px; background: var(--bg); display: grid; gap: 10px; }
+details.more summary { cursor: pointer; font-size: 13px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.custom { display: grid; grid-template-columns: minmax(0, 1fr) 120px auto; gap: 8px; align-items: end; }
+@media (max-width: 520px) { .custom { grid-template-columns: 1fr 1fr; } .custom .btn { grid-column: 1 / -1; } }
+.danger { justify-self: start; }
+@media (prefers-reduced-motion: no-preference) { .slot, .chip, .tier, .k { transition: border-color .12s; } }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <header class="top">
+    <div>
+      <p class="eyebrow">Valorant collection builder</p>
+      <h1>Dream Inventory</h1>
+      <p class="lede">Pick a skin for every weapon. The total updates as you go, in VP and in real money.</p>
+      <p class="note" id="dstat" role="status" aria-live="polite" style="margin-top:8px">Loading skins…</p>
+    </div>
+    <div class="tools">
+      <div class="tools-row" id="fillrow"><span class="tools-lab">Fill empty gun slots</span></div>
+      <div class="tools-row">
+        <button class="ghost" id="clear" type="button">Clear everything</button>
+        <p class="note" id="exnote">Example loadout shown. Change any slot to make it yours.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section id="board" class="board" aria-label="Weapons"></section>
+
+    <aside id="summary" class="summary" aria-label="Cost summary">
+      <div>
+        <h2 class="sum-h">Inventory total</h2>
+        <div class="big"><span id="tot">0</span><small>VP</small></div>
+        <p class="sub" id="cnt"></p>
+        <div class="tierbar" id="tbar" aria-hidden="true"></div>
+        <ul class="legend" id="legend"></ul>
+      </div>
+
+      <div class="fields">
+        <label class="f" for="owned">VP I already have
+          <input id="owned" type="number" min="0" step="1" value="0" inputmode="numeric">
+        </label>
+        <label class="f" for="rate">TND per 1 USD
+          <input id="rate" type="number" min="0" step="0.01" value="3.00" inputmode="decimal">
+        </label>
+      </div>
+
+      <div class="buy">
+        <h2 class="sum-h">To buy</h2>
+        <div class="money"><span class="usd" id="usd">$0.00</span><span class="tnd" id="tnd"></span></div>
+        <p class="sub" id="needline"></p>
+        <ul class="packs" id="packs"></ul>
+        <p class="fine">Cheapest mix of VP packs at US prices. Your region's prices and bonuses can differ, so check the in-game store.</p>
+      </div>
+
+      <div class="items">
+        <h2 class="sum-h">Your picks</h2>
+        <ul id="items"></ul>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="copy" type="button">Copy summary</button>
+      </div>
+      <textarea id="copybox" readonly hidden aria-label="Summary text"></textarea>
+      <p class="fine" id="copymsg" hidden></p>
+    </aside>
+  </main>
+
+  <footer>Fan-made calculator, not affiliated with Riot Games. Skin names, tiers and pictures come from the community VALORANT-API, refreshed automatically every day. They belong to Riot Games. Prices follow the standard store tiers (Select 875, Deluxe 1,275, Premium 1,775, Exclusive 2,175, Ultra 2,475 VP; knives about 3,550 to 5,350 VP). Battle pass, limited and other skins that are not in the store can cost differently or not be buyable at all, so edit any price in the picker. Radianite upgrades are not counted.</footer>
+</div>
+
+<div class="bar" id="bar">
+  <div><b id="bar-vp">0 VP</b><span id="bar-usd">$0.00</span></div>
+  <button class="btn" type="button" id="bar-go">Details</button>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="pk-title">
+    <header class="sheet-h">
+      <div><p class="eyebrow" id="pk-cat"></p><h2 id="pk-title"></h2></div>
+      <button class="x" id="pk-close" type="button" aria-label="Close">&times;</button>
+    </header>
+    <div class="cur" id="pk-cur"></div>
+    <h3 class="lab">Skins <span id="pk-count" style="letter-spacing:0;text-transform:none;font-family:var(--f-num)"></span></h3>
+    <div class="gal-tools"><input id="pk-search" type="search" placeholder="Search skins" aria-label="Search skins" autocomplete="off"></div>
+    <div class="fchips" id="pk-filters"></div>
+    <div class="gal" id="pk-gal"></div>
+    <details class="more">
+      <summary>Not in the list? Use a price tier or add your own</summary>
+      <h3 class="lab" id="pk-tier-lab">Price tier</h3>
+      <div class="tiers" id="pk-tiers"></div>
+      <h3 class="lab">Add your own</h3>
+      <form class="custom" id="pk-form">
+        <label class="f" for="pk-cname">Skin name<input id="pk-cname" type="text" maxlength="60" placeholder="e.g. Helix Phantom"></label>
+        <label class="f" for="pk-cvp">Price in VP<input id="pk-cvp" type="number" min="0" step="1" inputmode="numeric" placeholder="1775"></label>
+        <button class="btn" type="submit">Add</button>
+      </form>
+    </details>
+  </section>
+</div>
+
+<script>
+(function () {
+  var TIERS = {
+    S: { n: 'Select', vp: 875, c: 'var(--t-s)' },
+    D: { n: 'Deluxe', vp: 1275, c: 'var(--t-d)' },
+    P: { n: 'Premium', vp: 1775, c: 'var(--t-p)' },
+    E: { n: 'Exclusive', vp: 2175, c: 'var(--t-e)' },
+    U: { n: 'Ultra', vp: 2475, c: 'var(--t-u)' },
+    C: { n: 'Custom', vp: 0, c: 'var(--t-c)' }
+  };
+  var TIER_ORDER = ['S', 'D', 'P', 'E', 'U', 'C'];
+  var MELEE = [
+    { n: 'Standard knife', vp: 3550, t: 'P' },
+    { n: 'Premium knife', vp: 4350, t: 'E' },
+    { n: 'Ultra knife', vp: 5350, t: 'U' }
+  ];
+  var PACKS = [
+    { vp: 475, cents: 499 }, { vp: 1000, cents: 999 }, { vp: 2050, cents: 1999 },
+    { vp: 3650, cents: 3499 }, { vp: 5350, cents: 4999 }, { vp: 11000, cents: 9999 }
+  ];
+  var COLS = [['Sidearms'], ['SMGs', 'Shotguns', 'Melee'], ['Rifles'], ['Sniper Rifles', 'Machine Guns']];
+  var W = [
+    { id: 'classic', n: 'Classic', g: 'Sidearms' }, { id: 'shorty', n: 'Shorty', g: 'Sidearms' },
+    { id: 'frenzy', n: 'Frenzy', g: 'Sidearms' }, { id: 'ghost', n: 'Ghost', g: 'Sidearms' },
+    { id: 'bandit', n: 'Bandit', g: 'Sidearms' }, { id: 'sheriff', n: 'Sheriff', g: 'Sidearms' },
+    { id: 'stinger', n: 'Stinger', g: 'SMGs' }, { id: 'spectre', n: 'Spectre', g: 'SMGs' },
+    { id: 'bucky', n: 'Bucky', g: 'Shotguns' }, { id: 'judge', n: 'Judge', g: 'Shotguns' },
+    { id: 'melee', n: 'Melee', g: 'Melee', melee: true },
+    { id: 'bulldog', n: 'Bulldog', g: 'Rifles' }, { id: 'guardian', n: 'Guardian', g: 'Rifles' },
+    { id: 'warden', n: 'Warden', g: 'Rifles' }, { id: 'phantom', n: 'Phantom', g: 'Rifles' },
+    { id: 'vandal', n: 'Vandal', g: 'Rifles' },
+    { id: 'marshal', n: 'Marshal', g: 'Sniper Rifles' }, { id: 'outlaw', n: 'Outlaw', g: 'Sniper Rifles' },
+    { id: 'operator', n: 'Operator', g: 'Sniper Rifles' },
+    { id: 'ares', n: 'Ares', g: 'Machine Guns' }, { id: 'odin', n: 'Odin', g: 'Machine Guns' }
+  ];
+  /* Loaded from catalog.json: skins per weapon as [name, tier]. The list position is the picture's cell in atlas/<weapon>.webp. */
+  var CATALOG = { cols: 6, w: {}, v: '' };
+  var MELEE_PRICE = { S: 3550, D: 3550, P: 3550, E: 4350, U: 5350 };
+  var KEY = 'dream-inventory-v1';
+
+  var sel = {};
+  var example = true;
+  var owned = 0;
+  var rate = 3;
+  var cur = null;
+  var opener = null;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
+  function usd(c) { return '$' + (c / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function clampInt(v, max) { var n = parseInt(v, 10); if (!isFinite(n) || n < 0) return 0; return Math.min(n, max || 1e7); }
+  function skinPrice(wid, t) { var w = wById(wid); return ((w && w.melee ? MELEE_PRICE[t] : TIERS[t].vp) || 0); }
+  function thumbStyle(wid, idx) {
+    var c = CATALOG.w[wid], cols = CATALOG.cols;
+    var px = cols > 1 ? (idx % cols) / (cols - 1) * 100 : 0;
+    var py = c.rows > 1 ? Math.floor(idx / cols) / (c.rows - 1) * 100 : 0;
+    return 'background-image:url(atlas/' + wid + '.webp?v=' + (CATALOG.v || '') + ');background-size:' + (cols * 100) + '% ' + (c.rows * 100) + '%;background-position:' + px.toFixed(3) + '% ' + py.toFixed(3) + '%';
+  }
+  function thumbHtml(wid, s) {
+    return (s && s.img != null && CATALOG.w[wid]) ? '<span class="th" style="' + thumbStyle(wid, s.img) + '"></span>' : '';
+  }
+  function buildExample() {
+    var out = {};
+    [['vandal', 'Glitchpop Vandal'], ['phantom', 'Oni Phantom'], ['operator', 'Elderflame Operator'], ['sheriff', 'Reaver Sheriff'],
+     ['classic', 'Prime Classic'], ['ghost', 'Sovereign Ghost'], ['judge', 'Glitchpop Judge'], ['melee', 'Glitchpop Dagger']].forEach(function (p) {
+      var c = CATALOG.w[p[0]]; if (!c) return;
+      for (var i = 0; i < c.skins.length; i++) {
+        if (c.skins[i][0] === p[1]) { out[p[0]] = { name: p[1], tier: c.skins[i][1], vp: skinPrice(p[0], c.skins[i][1]), img: i, sk: p[1] }; break; }
+      }
+    });
+    return out;
+  }
+  function wById(id) { for (var i = 0; i < W.length; i++) if (W[i].id === id) return W[i]; return null; }
+
+  /* --- storage (per-viewer convenience only) --- */
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return false;
+      var d = JSON.parse(raw);
+      if (d && typeof d.sel === 'object') {
+        sel = d.sel || {}; owned = clampInt(d.owned); rate = +d.rate > 0 ? +d.rate : 3; example = false;
+        return true;
+      }
+    } catch (e) {}
+    return false;
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify({ sel: sel, owned: owned, rate: rate })); } catch (e) {}
+  }
+
+  /* --- pack planner: cheapest mix of packs that gives at least `need` VP --- */
+  function plan(need) {
+    var counts = PACKS.map(function () { return 0; });
+    if (need <= 0) return { counts: counts, cents: 0, vp: 0 };
+    var rest = need;
+    if (need > 60000) {
+      var big = PACKS.length - 1;
+      var k = Math.floor(need / PACKS[big].vp) - 1;
+      counts[big] += k;
+      rest = need - k * PACKS[big].vp;
+    }
+    var dp = new Float64Array(rest + 1);
+    var pick = new Int8Array(rest + 1);
+    for (var i = 1; i <= rest; i++) {
+      var best = Infinity, bk = 0;
+      for (var p = 0; p < PACKS.length; p++) {
+        var c = dp[Math.max(0, i - PACKS[p].vp)] + PACKS[p].cents;
+        if (c < best) { best = c; bk = p; }
+      }
+      dp[i] = best; pick[i] = bk;
+    }
+    var j = rest;
+    while (j > 0) { var b = pick[j]; counts[b]++; j = Math.max(0, j - PACKS[b].vp); }
+    var cents = 0, vp = 0;
+    counts.forEach(function (n, idx) { cents += n * PACKS[idx].cents; vp += n * PACKS[idx].vp; });
+    return { counts: counts, cents: cents, vp: vp };
+  }
+
+  /* --- state changes --- */
+  function setSel(id, obj) {
+    if (obj) sel[id] = obj; else delete sel[id];
+    example = false;
+    save(); renderAll();
+  }
+
+  /* --- rendering --- */
+  function slotHtml(w) {
+    var s = sel[w.id];
+    var tc = s ? TIERS[s.tier].c : 'var(--line)';
+    return '<button type="button" class="slot' + (s ? '' : ' empty') + '" data-id="' + w.id + '" style="--tc:' + tc + '">' +
+      '<span class="w">' + w.n + '</span>' + thumbHtml(w.id, s) +
+      '<span class="n">' + (s ? esc(s.name) : 'Default skin') + '</span>' +
+      '<span class="p">' + (s ? fmt(s.vp) + ' VP' : 'Free') + '</span></button>';
+  }
+  function renderBoard() {
+    var html = '';
+    COLS.forEach(function (groups) {
+      html += '<div class="col">';
+      groups.forEach(function (g) {
+        var list = W.filter(function (w) { return w.g === g; });
+        var picked = list.filter(function (w) { return sel[w.id]; }).length;
+        html += '<div><div class="cat-h"><h2>' + g + '</h2><span>' + picked + '/' + list.length + '</span></div><div class="slots">' +
+          list.map(slotHtml).join('') + '</div></div>';
+      });
+      html += '</div>';
+    });
+    $('board').innerHTML = html;
+  }
+
+  function renderSummary() {
+    var ids = Object.keys(sel).filter(function (id) { return wById(id); });
+    var total = 0, byTier = {};
+    ids.forEach(function (id) {
+      var s = sel[id]; total += s.vp;
+      byTier[s.tier] = byTier[s.tier] || { n: 0, vp: 0 };
+      byTier[s.tier].n++; byTier[s.tier].vp += s.vp;
+    });
+    $('tot').textContent = fmt(total);
+    $('cnt').textContent = ids.length + ' of ' + W.length + ' weapons have a skin';
+
+    var bar = '', leg = '';
+    TIER_ORDER.forEach(function (t) {
+      if (!byTier[t]) return;
+      bar += '<div title="' + TIERS[t].n + ': ' + fmt(byTier[t].vp) + ' VP" style="flex:' + Math.max(byTier[t].vp, 1) + ';background:' + TIERS[t].c + '"></div>';
+      leg += '<li><i style="background:' + TIERS[t].c + '"></i>' + TIERS[t].n + ' &times; ' + byTier[t].n + ' · ' + fmt(byTier[t].vp) + ' VP</li>';
+    });
+    $('tbar').innerHTML = bar; $('tbar').style.display = bar ? 'flex' : 'none';
+    $('legend').innerHTML = leg;
+
+    var need = Math.max(0, total - owned);
+    var pl = plan(need);
+    $('usd').textContent = usd(pl.cents);
+    $('tnd').textContent = '≈ ' + (pl.cents / 100 * rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' TND';
+    if (!total) {
+      $('needline').textContent = 'Pick a skin to see what it costs.';
+    } else if (need === 0) {
+      $('needline').textContent = 'Your VP already covers this inventory.';
+    } else {
+      $('needline').textContent = 'You need ' + fmt(need) + ' VP more' + (owned ? ' after your ' + fmt(owned) + ' VP' : '') +
+        (pl.vp > need ? ', with ' + fmt(pl.vp - need) + ' VP left over.' : '.');
+    }
+    var pk = '';
+    pl.counts.forEach(function (n, i) {
+      if (n) pk += '<li><span>' + n + ' &times; ' + fmt(PACKS[i].vp) + ' VP</span><span>' + usd(n * PACKS[i].cents) + '</span></li>';
+    });
+    $('packs').innerHTML = pk;
+
+    var sorted = ids.slice().sort(function (a, b) { return sel[b].vp - sel[a].vp; });
+    $('items').innerHTML = sorted.length ? sorted.map(function (id) {
+      var s = sel[id], w = wById(id);
+      return '<li style="--tc:' + TIERS[s.tier].c + '"><i></i><span class="nm">' + esc(s.name) + (s.name.toLowerCase().indexOf(w.n.toLowerCase()) === -1 ? ' <span style="color:var(--muted)">(' + w.n + ')</span>' : '') +
+        '</span><span class="vp">' + fmt(s.vp) + '</span><button type="button" class="rm" data-rm="' + id + '" aria-label="Remove ' + esc(s.name) + '">&times;</button></li>';
+    }).join('') : '<li class="empty-note" style="display:block">Nothing picked yet. Tap a weapon on the board.</li>';
+
+    $('bar-vp').textContent = fmt(total) + ' VP';
+    $('bar-usd').textContent = need ? usd(pl.cents) : '$0.00';
+    $('exnote').hidden = !example || !ids.length;
+  }
+  function renderAll() { renderBoard(); renderSummary(); }
+
+  /* --- picker --- */
+  function renderCur() {
+    var w = wById(cur), s = sel[cur];
+    if (!s) { $('pk-cur').innerHTML = '<span class="sub" style="margin:0">Using the default skin. Free.</span>'; return; }
+    $('pk-cur').innerHTML = '<span class="lab" style="margin:0">Your pick</span><div class="cur-row">' +
+      '<label class="f" for="pk-name">Name<input id="pk-name" type="text" maxlength="60" value="' + esc(s.name) + '"></label>' +
+      '<label class="f" for="pk-price">Price in VP<input id="pk-price" type="number" min="0" step="1" inputmode="numeric" value="' + s.vp + '"></label>' +
+      '<button type="button" class="ghost rm-wide" id="pk-remove">Use default</button></div>';
+  }
+  function renderTiers() {
+    var w = wById(cur);
+    if (w.melee) {
+      $('pk-tier-lab').textContent = 'Knife price';
+      $('pk-tiers').innerHTML = MELEE.map(function (m, i) {
+        return '<button type="button" class="tier" data-mt="' + i + '" style="--c:' + TIERS[m.t].c + '"><b>' + m.n.replace(' knife', '') + '</b><span>' + fmt(m.vp) + ' VP</span></button>';
+      }).join('');
+    } else {
+      $('pk-tier-lab').textContent = 'Price tier';
+      $('pk-tiers').innerHTML = ['S', 'D', 'P', 'E', 'U'].map(function (t) {
+        return '<button type="button" class="tier" data-t="' + t + '" style="--c:' + TIERS[t].c + '"><b>' + TIERS[t].n + '</b><span>' + fmt(TIERS[t].vp) + ' VP</span></button>';
+      }).join('');
+    }
+  }
+  var pkFilter = 'all';
+  function renderGallery() {
+    var c = CATALOG.w[cur], all = c ? c.skins : [];
+    var q = $('pk-search').value.trim().toLowerCase();
+    var counts = {};
+    all.forEach(function (s) { counts[s[1]] = (counts[s[1]] || 0) + 1; });
+    var chips = '<button type="button" class="fchip" data-f="all" aria-pressed="' + (pkFilter === 'all') + '">All ' + all.length + '</button>';
+    ['S', 'D', 'P', 'E', 'U', 'C'].forEach(function (t) {
+      if (counts[t]) chips += '<button type="button" class="fchip" data-f="' + t + '" aria-pressed="' + (pkFilter === t) + '" style="--c:' + TIERS[t].c + '"><i></i>' + TIERS[t].n + ' ' + counts[t] + '</button>';
+    });
+    $('pk-filters').innerHTML = chips;
+    var html = '', n = 0;
+    all.forEach(function (s, i) {
+      if (pkFilter !== 'all' && s[1] !== pkFilter) return;
+      if (q && s[0].toLowerCase().indexOf(q) === -1) return;
+      n++;
+      html += '<button type="button" class="sk" data-i="' + i + '" style="--c:' + TIERS[s[1]].c + '"' + (sel[cur] && sel[cur].img === i ? ' aria-current="true"' : '') + '>' +
+        '<span class="th" style="' + thumbStyle(cur, i) + '"></span><b>' + esc(s[0]) + '</b>' +
+        '<span class="meta">' + TIERS[s[1]].n + ' · ' + fmt(skinPrice(cur, s[1])) + ' VP</span></button>';
+    });
+    $('pk-count').textContent = n + ' of ' + all.length;
+    $('pk-gal').innerHTML = html || '<p class="note">' + (all.length ? 'No skins match.' : 'No skins loaded yet. Use a price tier or add your own below.') + '</p>';
+  }
+  function openPicker(id, from) {
+    cur = id; opener = from || null;
+    var w = wById(id);
+    $('pk-cat').textContent = w.g;
+    $('pk-title').textContent = w.n;
+    $('pk-search').value = '';
+    $('pk-cname').value = ''; $('pk-cvp').value = '';
+    pkFilter = 'all';
+    renderCur(); renderTiers(); renderGallery();
+    $('pk-gal').scrollTop = 0;
+    $('scrim').hidden = false;
+    $('pk-close').focus();
+  }
+  function closePicker() {
+    $('scrim').hidden = true; cur = null;
+    if (opener && document.body.contains(opener)) { try { opener.focus(); } catch (e) {} }
+    else { var first = document.querySelector('.slot'); if (first) first.focus(); }
+  }
+  function pick(obj) { var id = cur; closePicker(); setSel(id, obj); var el = document.querySelector('.slot[data-id="' + id + '"]'); if (el) el.focus(); }
+
+  /* --- events --- */
+  $('board').addEventListener('click', function (e) {
+    var b = e.target.closest('.slot'); if (b) openPicker(b.getAttribute('data-id'), b);
+  });
+  $('items').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-rm]'); if (b) setSel(b.getAttribute('data-rm'), null);
+  });
+  $('pk-close').addEventListener('click', closePicker);
+  $('scrim').addEventListener('click', function (e) { if (e.target === $('scrim')) closePicker(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !$('scrim').hidden) closePicker(); });
+  $('pk-search').addEventListener('input', renderGallery);
+  $('pk-filters').addEventListener('click', function (e) {
+    var b = e.target.closest('.fchip'); if (!b) return;
+    pkFilter = b.getAttribute('data-f'); renderGallery();
+  });
+  $('pk-tiers').addEventListener('click', function (e) {
+    var b = e.target.closest('.tier'); if (!b) return;
+    var w = wById(cur);
+    if (b.hasAttribute('data-mt')) { var m = MELEE[+b.getAttribute('data-mt')]; pick({ name: m.n, tier: m.t, vp: m.vp }); }
+    else { var t = b.getAttribute('data-t'); pick({ name: TIERS[t].n + ' skin', tier: t, vp: TIERS[t].vp }); }
+  });
+  $('pk-gal').addEventListener('click', function (e) {
+    var b = e.target.closest('.sk'); if (!b) return;
+    var i = +b.getAttribute('data-i'), s = CATALOG.w[cur].skins[i];
+    pick({ name: s[0], tier: s[1], vp: skinPrice(cur, s[1]), img: i, sk: s[0] });
+  });
+  $('pk-cur').addEventListener('input', function (e) {
+    if (!cur || !sel[cur]) return;
+    if (e.target.id === 'pk-name') sel[cur].name = e.target.value.trim() || 'Custom skin';
+    if (e.target.id === 'pk-price') sel[cur].vp = clampInt(e.target.value);
+    example = false; save(); renderAll();
+  });
+  $('pk-cur').addEventListener('click', function (e) {
+    if (e.target.id === 'pk-remove') { var id = cur; closePicker(); setSel(id, null); }
+  });
+  $('pk-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var name = $('pk-cname').value.trim() || 'Custom skin';
+    var vp = clampInt($('pk-cvp').value);
+    var t = 'C';
+    TIER_ORDER.forEach(function (k) { if (k !== 'C' && TIERS[k].vp === vp) t = k; });
+    pick({ name: name, tier: t, vp: vp });
+  });
+  $('owned').addEventListener('input', function () { owned = clampInt(this.value); save(); renderSummary(); });
+  $('rate').addEventListener('input', function () { var r = parseFloat(this.value); rate = isFinite(r) && r > 0 ? r : 0; save(); renderSummary(); });
+  $('clear').addEventListener('click', function () { sel = {}; example = false; save(); renderAll(); });
+  $('bar-go').addEventListener('click', function () { $('summary').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+
+  ['S', 'D', 'P', 'E', 'U'].forEach(function (t) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.style.setProperty('--c', TIERS[t].c);
+    b.innerHTML = '<i></i>' + TIERS[t].n;
+    b.addEventListener('click', function () {
+      W.forEach(function (w) { if (!w.melee && !sel[w.id]) sel[w.id] = { name: TIERS[t].n + ' skin', tier: t, vp: TIERS[t].vp }; });
+      example = false; save(); renderAll();
+    });
+    $('fillrow').appendChild(b);
+  });
+
+  $('copy').addEventListener('click', function () {
+    var ids = Object.keys(sel).filter(wById).sort(function (a, b) { return sel[b].vp - sel[a].vp; });
+    var total = ids.reduce(function (s, id) { return s + sel[id].vp; }, 0);
+    var need = Math.max(0, total - owned), pl = plan(need);
+    var lines = ['My Valorant dream inventory', ''];
+    ids.forEach(function (id) { lines.push(wById(id).n + ': ' + sel[id].name + ' - ' + fmt(sel[id].vp) + ' VP'); });
+    lines.push('', 'Total: ' + fmt(total) + ' VP', 'VP to buy: ' + fmt(need));
+    PACKS.forEach(function (p, i) { if (pl.counts[i]) lines.push('  ' + pl.counts[i] + ' x ' + fmt(p.vp) + ' VP pack'); });
+    lines.push('Estimated cost: ' + usd(pl.cents) + ' (about ' + (pl.cents / 100 * rate).toFixed(2) + ' TND)');
+    var text = lines.join('\n');
+    var box = $('copybox'), msg = $('copymsg');
+    function fallback() { box.value = text; box.hidden = false; msg.hidden = false; msg.textContent = 'Select the text above and copy it.'; box.focus(); box.select(); }
+    try {
+      navigator.clipboard.writeText(text).then(function () { box.hidden = true; msg.hidden = false; msg.textContent = 'Summary copied.'; }, fallback);
+    } catch (err) { fallback(); }
+  });
+
+  /* --- start --- */
+  var GROUPS_DONE = false;
+  function applyCatalog(c) {
+    CATALOG = c;
+    Object.keys(c.meta || {}).forEach(function (id) {
+      if (wById(id)) return;
+      var m = c.meta[id];
+      W.push({ id: id, n: m.n, g: m.g, melee: m.g === 'Melee' });
+      if (!COLS.some(function (col) { return col.indexOf(m.g) !== -1; })) COLS.push([m.g]);
+    });
+  }
+  function countSkins() { var n = 0; Object.keys(CATALOG.w).forEach(function (k) { n += CATALOG.w[k].skins.length; }); return n; }
+  function status(msg, retry) { $('dstat').innerHTML = esc(msg) + (retry ? ' <button type="button" class="ghost" id="dretry">Retry</button>' : ''); }
+  function afterCatalog() {
+    /* The list can change between visits, so re-find each saved pick's picture by the skin's name. */
+    Object.keys(sel).forEach(function (id) {
+      var s = sel[id], c = CATALOG.w[id];
+      if (!s || !s.sk) return;
+      s.img = null;
+      if (c) for (var i = 0; i < c.skins.length; i++) { if (c.skins[i][0] === s.sk) { s.img = i; break; } }
+    });
+    if (example && !Object.keys(sel).length) sel = buildExample();
+    renderAll();
+    if (cur) renderGallery();
+  }
+  function loadCatalog() {
+    if (!countSkins()) status('Loading skins…');
+    fetch('catalog.json', { cache: 'no-cache' })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (c) {
+        applyCatalog(c); afterCatalog();
+        status(fmt(countSkins()) + ' skins loaded.');
+      })
+      .catch(function () { status('Could not load the skin list.', true); });
+  }
+  $('dstat').addEventListener('click', function (e) { if (e.target.id === 'dretry') loadCatalog(); });
+
+  if (!load()) { example = true; }
+  $('owned').value = owned; $('rate').value = rate.toFixed(2);
+  renderAll();
+  loadCatalog();
+})();
+</script>
+</body>
+</html>
