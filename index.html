@@ -335,7 +335,7 @@ details.more summary { cursor: pointer; font-size: 13px; font-weight: 600; lette
     var c = CATALOG.w[wid], cols = CATALOG.cols;
     var px = cols > 1 ? (idx % cols) / (cols - 1) * 100 : 0;
     var py = c.rows > 1 ? Math.floor(idx / cols) / (c.rows - 1) * 100 : 0;
-    return 'background-image:url(atlas/' + wid + '.webp?v=' + (CATALOG.v || '') + ');background-size:' + (cols * 100) + '% ' + (c.rows * 100) + '%;background-position:' + px.toFixed(3) + '% ' + py.toFixed(3) + '%';
+    return 'background-image:url(' + wid + '.webp?v=' + (CATALOG.v || '') + ');background-size:' + (cols * 100) + '% ' + (c.rows * 100) + '%;background-position:' + px.toFixed(3) + '% ' + py.toFixed(3) + '%';
   }
   function thumbHtml(wid, s) {
     return (s && s.img != null && CATALOG.w[wid]) ? '<span class="th" style="' + thumbStyle(wid, s.img) + '"></span>' : '';
